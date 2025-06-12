@@ -1,4 +1,4 @@
-
+import axios from 'axios'
 import React, { useState, useRef, useEffect } from 'react'
 import EmojiPicker from 'emoji-picker-react'
 import {
@@ -112,7 +112,7 @@ function Chatbot() {
       setFilePreview(null)
     }
   }
-
+  // Handle file upload
   const handleFileUpload = () => {
     if (!file) return
     setMessages((msgs) => [
@@ -163,6 +163,30 @@ function Chatbot() {
     }, 1200)
   }
 
+  // Handle summarization for file uploads
+  const handleSummarize = async () => {
+  if (!file) {
+    alert("Please upload a file first.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await axios.post("http://localhost:5000/summarize", formData);
+    const summary = res.data.summary;
+
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { text: summary, sender: "bot", time: new Date(), status: "delivered" },
+    ]);
+  } catch (error) {
+    console.error(error);
+    alert("Something went wrong during summarization.");
+  }
+};
+
   // Message status simulation
   useEffect(() => {
     // Mark last user message as delivered after 1s
@@ -208,6 +232,7 @@ function Chatbot() {
     : {}
 
   return (
+    
     <ChatbotContainer style={{ position: 'static' }}>
       {!open && (
         <StyledFloatingButton
@@ -271,6 +296,9 @@ function Chatbot() {
                 <CloseButton onClick={handleClose}>×</CloseButton>
               </div>
             </Header>
+            
+            
+
             {/* User profile controls */}
             <div style={{
               display: 'flex',
@@ -310,12 +338,14 @@ function Chatbot() {
                 : 'repeating-linear-gradient(135deg, #f7f7f7, #f7f7f7 20px, #f0f4ff 20px, #f0f4ff 40px)'
             }}>
               {messages.map((msg, i) => (
+                
                 <div key={i} style={{
                   display: 'flex',
                   alignItems: 'flex-end',
                   marginBottom: 2,
                   flexDirection: msg.sender === 'user' ? 'row-reverse' : 'row'
                 }}>
+                  
                   <div style={{
                     fontSize: '1.3rem',
                     margin: msg.sender === 'user' ? '0 0 0 8px' : '0 8px 0 0',
@@ -366,6 +396,7 @@ function Chatbot() {
                   </MessageBubble>
                 </div>
               ))}
+              
               {/* Typing indicators */}
               {userTyping && (
                 <div style={{
@@ -585,6 +616,26 @@ function Chatbot() {
                     >
                       Upload
                     </button>
+                    <button
+                      onClick={handleSummarize}
+                      style={{
+                        background: theme === 'dark'
+                          ? 'linear-gradient(90deg, #23272f 70%, #3a3f4b 100%)'
+                          : 'linear-gradient(90deg, #28a745 70%, #5cd67f 100%)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '0.5rem 1rem',
+                        fontSize: '1rem',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        fontWeight: 600,
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.07)'
+                      }}
+                    >
+                      Summarize
+                    </button>
+
                     <span style={{
                       fontSize: '0.9rem',
                       maxWidth: 100,
@@ -624,4 +675,7 @@ function Chatbot() {
     </ChatbotContainer>
   )
 }
+
 export default Chatbot
+
+
